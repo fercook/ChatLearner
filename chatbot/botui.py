@@ -13,13 +13,14 @@
 # limitations under the License.
 # ==============================================================================
 from __future__ import print_function
+
 import os
 import sys
 import tensorflow as tf
 
 from settings import PROJECT_ROOT
 from chatbot.botpredictor import BotPredictor
-import math
+
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -29,11 +30,6 @@ def bot_ui():
     knbs_dir = os.path.join(PROJECT_ROOT, 'Data', 'KnowledgeBase')
     res_dir = os.path.join(PROJECT_ROOT, 'Data', 'Result')
 
-    vocab = []
-    with open(os.path.join(corp_dir,"vocab.txt")) as fi:
-        for line in fi:
-            vocab.append(line.strip())
-        
     with tf.Session() as sess:
         predictor = BotPredictor(sess, corpus_dir=corp_dir, knbase_dir=knbs_dir,
                                  result_dir=res_dir, result_file='basic')
@@ -51,11 +47,7 @@ def bot_ui():
                 print("Thank you for using ChatLearner. Goodbye.")
                 break
 
-            answer, other_choices, probabilities = predictor.predict(session_id, question, fullResponse=True)
-            print (answer)
-            print ([ {"word": vocab[other_choices[n][0][0]], "prob": "{0:.4f}".format(math.exp(probabilities[n][0][0]))} for n in range(len(other_choices)) if vocab[other_choices[n][0][0]]!= '_eos_'  ])
-#            for depth in range(len(other_choices)):
-#                print ( [ (vocab[word],math.exp(prob)) for word,prob in zip( other_choices[depth][0], probabilities[depth][0] ) ] )
+            print(predictor.predict(session_id, question))
             print("> ", end="")
             sys.stdout.flush()
             question = sys.stdin.readline()
