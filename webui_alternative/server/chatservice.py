@@ -35,7 +35,7 @@ digits = math.pow(10,DIGITS)
 def reply():
     session_id = int(request.args.get('sessionId'))
     raw_question = request.args.get('question')
-    blob_question = try_translate(str(raw_question))
+    blob_question = try_translate(raw_question) #UNICODE BUG ???
     
     if session_id not in predictor.session_data.session_dict:  # Including the case of 0
         session_id = predictor.session_data.add_session()
@@ -82,6 +82,13 @@ def try_translate(sentence):
         except:
             pass
     return blob
+
+def clean_string(answer, verbose=True):
+    answer = str(answer)
+    replace_list = [‘“’,  ‘´’,  ‘`’, ‘*’]
+    for strip_ in replace_list:
+        answer = answer.replace(strip_, ‘’ )
+    return answer
 
 if __name__ == "__main__":
     corp_dir = os.path.join(PROJECT_ROOT, 'Data', 'Corpus')
