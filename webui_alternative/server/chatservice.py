@@ -1,3 +1,4 @@
+# coding=utf-8
 # Copyright 2017 Bo Shao. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,6 +57,7 @@ def reply():
                 x,y,pos = tsne[word.lower()]
             else:
                 x,y,pos = 60*random.random(), 60*random.random(), random.randrange(21)
+                tsne[word.lower()] = (x,y,pos)
             word_descriptions.append( {"word": word, "prob": probability, "x": float(x), "y": float(y), "wordtype": int(pos) }  )
     return jsonify({'sessionId': session_id, 'sentence': answer, 'sentiment': polarity, 'words': word_descriptions})
 
@@ -70,6 +72,7 @@ def sentiment():
             x,y,pos = tsne[word.lower()]
         else:
             x,y,pos = 60*random.random(), 60*random.random(), random.randrange(21)
+            tsne[word.lower()] = (x,y,pos)
         word_descriptions.append( {"word": word, "x": float(x), "y": float(y), "wordtype": int(pos) }  )
 
     return jsonify({'sentence': sentence, 'sentiment': blob.sentiment.polarity, 'words': word_descriptions})
@@ -84,6 +87,7 @@ def combine_sentiment():
             x, y, pos = tsne[word.lower()]
         else:
             x, y, pos = 60 * random.random(), 60 * random.random(), random.randrange(21)
+            tsne[word.lower()] = (x,y,pos)
         word_descriptions.append({'word': word, 'x': float(x), 'y': float(y), 'wordtype': int(pos) })
 
     return jsonify({'sentence': sentence, 'sentiment': combine_sentiments(sentence), 'words': word_descriptions})
