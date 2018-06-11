@@ -20,11 +20,11 @@ from settings import PROJECT_ROOT
 from chatbot.botpredictor import BotPredictor
 
 from textblob import TextBlob
+
 from textblob.sentiments import NaiveBayesAnalyzer, PatternAnalyzer
 import math
 import random
 from numpy import mean
-
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 app = Flask(__name__)
@@ -110,6 +110,7 @@ def combine_sentiments(text, verbose=False):
     average_sentiment = mean([prob_to_polarity(blob_nb.sentiment.p_pos),
                             blob_pa.sentiment.polarity])
     return average_sentiment
+
 
 def prob_to_polarity(prob):
     '''
