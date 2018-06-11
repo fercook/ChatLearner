@@ -20,8 +20,9 @@ from settings import PROJECT_ROOT
 from chatbot.botpredictor import BotPredictor
 
 from textblob import TextBlob
+from textblob.sentiment import NaiveBayesClassifier, PatternAnalyzer
 import math
-import random 
+import random
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 app = Flask(__name__)
@@ -36,13 +37,14 @@ def reply():
     session_id = int(request.args.get('sessionId'))
     raw_question = request.args.get('question')
     blob_question = try_translate(raw_question) #UNICODE BUG ???
-    
+
     if session_id not in predictor.session_data.session_dict:  # Including the case of 0
         session_id = predictor.session_data.add_session()
 
     answer, other_choices, probabilities = predictor.predict(session_id, blob_question.raw, html_format=True, fullResponse=True)
+    answer = clean_string(answer)
     blob_answer = TextBlob(answer)
-    polarity = blob_answer.sentiment.polarity
+    polarity = combine_sentiments(blob_answer)
     word_descriptions=[]
     for n in range(len(other_choices)):
         word = vocab[other_choices[n][0][0]]
@@ -83,11 +85,29 @@ def try_translate(sentence):
             pass
     return blob
 
-def clean_string(answer, verbose=True):
+def combine_sentiments(text, verbose=False):
+    '''
+    Combine Naive Bayes Classifier with Pattern Analyzer.
+    '''
+    blob_nb = TextBlob(text, analyzer=NaiveBayesAnalyzer())
+    blob_pa = TextBlob(text, analyzer=PatternAnalyzer())
+    average_sentiment = mean([prob_to_polarity(blob_nb.sentiment.p_pos),
+                            blob_pa.sentiment.polarity])
+    return average_sentiment
+
+def prob_to_polarityu(prob):
+    '''
+    Convert probabilities [0,1] to polarities [-1, 1].
+    '''
+    return (prob - 0.5) * 2
+
+def clean_string(answer, verbose=False):
     answer = str(answer)
-    replace_list = [‘“’,  ‘´’,  ‘`’, ‘*’]
+    replace_list = ['"',  '´',  '`', '*']
     for strip_ in replace_list:
-        answer = answer.replace(strip_, ‘’ )
+        answer = answer.replace(strip_, '' )
+    if verbose:
+        print(answer)
     return answer
 
 if __name__ == "__main__":
