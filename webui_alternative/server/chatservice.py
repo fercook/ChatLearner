@@ -20,9 +20,11 @@ from settings import PROJECT_ROOT
 from chatbot.botpredictor import BotPredictor
 
 from textblob import TextBlob
-from textblob.sentiment import NaiveBayesClassifier, PatternAnalyzer
+
+from textblob.sentiments import NaiveBayesAnalyzer, PatternAnalyzer
 import math
 import random
+from numpy import mean
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 app = Flask(__name__)
@@ -72,6 +74,20 @@ def sentiment():
 
     return jsonify({'sentence': sentence, 'sentiment': blob.sentiment.polarity, 'words': word_descriptions})
 
+@app.route('/combine_sentiment', methods=['POST', 'GET'])
+def combine_sentiment():
+    sentence = request.args.get('sentence')
+    blob = try_translate(sentence)
+    word_descriptions = []
+    for word in blob.words:
+        if word.lower() in tsne:
+            x, y, pos = tsne[word.lower()]
+        else:
+            x, y, pos = 60 * random.random(), 60 * random.random(), random.randrange(21)
+        word_descriptions.append({'word': word, 'x': float(x), 'y': float(y), 'wordtype': int(pos) })
+
+    return jsonify({'sentence': sentence, 'sentiment': combine_sentiments(sentence), 'words': word_descriptions})
+
 def try_translate(sentence):
     print (sentence)
     blob = TextBlob(sentence)
@@ -95,7 +111,8 @@ def combine_sentiments(text, verbose=False):
                             blob_pa.sentiment.polarity])
     return average_sentiment
 
-def prob_to_polarityu(prob):
+
+def prob_to_polarity(prob):
     '''
     Convert probabilities [0,1] to polarities [-1, 1].
     '''
