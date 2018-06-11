@@ -20,9 +20,11 @@ from settings import PROJECT_ROOT
 from chatbot.botpredictor import BotPredictor
 
 from textblob import TextBlob
-from textblob.sentiment import NaiveBayesClassifier, PatternAnalyzer
+from textblob.sentiments import NaiveBayesAnalyzer, PatternAnalyzer
 import math
 import random
+from numpy import mean
+
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 app = Flask(__name__)
