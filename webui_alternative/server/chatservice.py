@@ -49,6 +49,8 @@ def reply():
     blob_answer = TextBlob(answer)
     polarity = combine_sentiments(blob_answer)
     word_descriptions=[]
+    print ("Q:"+blob_question.raw)
+    print ("A:"+blob_answer.raw)
     for n in range(len(other_choices)):
         word = vocab[other_choices[n][0][0]]
         if word != '_eos_' and word != 'rehashed':
@@ -90,10 +92,9 @@ def combine_sentiment():
             tsne[word.lower()] = (x,y,pos)
         word_descriptions.append({'word': word, 'x': float(x), 'y': float(y), 'wordtype': int(pos) })
 
-    return jsonify({'sentence': sentence, 'sentiment': combine_sentiments(sentence), 'words': word_descriptions})
+    return jsonify({'sentence': sentence, 'sentiment': combine_sentiments(blob), 'words': word_descriptions})
 
 def try_translate(sentence):
-    print (sentence)
     blob = TextBlob(sentence)
     lang = blob.detect_language()
     if lang == 'en':
@@ -109,8 +110,8 @@ def combine_sentiments(text, verbose=False):
     '''
     Combine Naive Bayes Classifier with Pattern Analyzer.
     '''
-    blob_nb = TextBlob(text, analyzer=NaiveBayesAnalyzer())
-    blob_pa = TextBlob(text, analyzer=PatternAnalyzer())
+    blob_nb = TextBlob(text.raw, analyzer=NaiveBayesAnalyzer())
+    blob_pa = TextBlob(text.raw, analyzer=PatternAnalyzer())
     average_sentiment = mean([prob_to_polarity(blob_nb.sentiment.p_pos),
                             blob_pa.sentiment.polarity])
     return average_sentiment
@@ -139,7 +140,8 @@ if __name__ == "__main__":
     with open(os.path.join(corp_dir,"vocab.txt")) as fi:
         for line in fi:
             vocab.append(line.strip())
-    with open(os.path.join(corp_dir,"1200K_glove_tSNE.csv")) as fi:
+    #with open(os.path.join(corp_dir,"1200K_glove_tSNE.csv")) as fi:
+    with open(os.path.join(corp_dir,"180word2vec_tSNE.csv")) as fi:
         fi.readline()
         for line in fi:
             sline = line.strip().split(",")
