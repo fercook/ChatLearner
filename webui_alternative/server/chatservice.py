@@ -63,6 +63,32 @@ def reply():
             word_descriptions.append( {"word": word, "prob": probability, "x": float(x), "y": float(y), "wordtype": int(pos) }  )
     return jsonify({'sessionId': session_id, 'sentence': answer, 'sentiment': polarity, 'words': word_descriptions})
 
+@app.route('/reply_fast', methods=['POST','GET'])
+def reply_fast():
+    session_id = int(request.args.get('sessionid'))
+    raw_question = request.args.get('question')
+    blob_question = try_translate(raw_question)
+
+    if session_id not in predictor.session_data.session_dict:
+        session_id = predictor.session_data.add_session()
+
+    answer, other_choices, probabilities = predictor.predict(session_id, blob_question.raw, html_format=True, fullResponse=True)
+    answer = clean_string(answer)
+    blob_answer = TextBlob(answer)
+    polarity = blob_answer.sentiment.polarity
+    word_descriptions=[]
+    for n in range(len(other_choices)):
+        word = vocab[other_choices[n][0][0]]
+        if word != '_eos_' and word != 'rehashed':
+            probability = float(int(digits*math.exp(probabilities[n][0][0]))/(digits*1.0))
+            if word.lower() in tsne:
+                x, y, pos = tsne[word.lower()]
+            else:
+                x, y, pos = 60 * random.random(), 60 * random.random(), random.randrange(21)
+            word_descriptions.append({'word': word, 'prob': probability, 'x': float(x), 'y': float(y), 'wordtype': int(pos)})
+    return jsonify({'sessionId': session_id, 'sentence': answer, 'sentiment':polarity, 'words': word_descriptions})
+
+
 
 @app.route('/sentiment', methods=['POST', 'GET'])
 def sentiment():
@@ -116,6 +142,20 @@ def combine_sentiments(text, verbose=False):
                             blob_pa.sentiment.polarity])
     return average_sentiment
 
+def pick_largest_sentiment(text, verbose=False):
+    '''
+    Return the polarity of the model that has higher absolute value.
+    '''
+    blob_nb = TextBlob(text, analyzer=NaiveBayesAnalyzer())
+    blob_pa = TextBlob(text, analyzer=PatternAnalyzer())
+    naive = abs(prob_to_polarity(blob_nb.sentiment.p_pos))
+    pattern = abs(blob_pa.sentiment.polarity)
+    if naive > pattern:
+        return blob_nb
+    elif pattern > naive:
+        return blob_pa
+    else:
+        return blob_pa
 
 def prob_to_polarity(prob):
     '''
